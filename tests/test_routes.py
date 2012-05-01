@@ -27,15 +27,19 @@ class RouteTests(unittest.TestCase):
 
 
     def test_num_routes(self):
-        self.assertTrue( len(route.get_routes()) == 4 ) # 2 routes + 2 redir
+        self.assertEqual(len(route.get_routes()['']),4) # 2 routes + 2 redir
 
     def test_routes_ordering(self):
         # our third handler's url route should be '/abc'
-        self.assertTrue( route.get_routes()[2].reverse() == '/abc' )
+        self.assertTrue( route.get_routes()[''][2].reverse() == '/abc' )
 
     def test_routes_name(self):
         # our first handler's url route should be '/xyz'
-        t = tornado.web.Application(route.get_routes(), {})
+        host_routes = route.get_routes()
+        t = tornado.web.Application([], {})
+        for host, routes in host_routes.iteritems():
+            t.add_handlers(host, routes)
+
         self.assertTrue( t.reverse_url('abc') )
         self.assertTrue( t.reverse_url('other') )
 

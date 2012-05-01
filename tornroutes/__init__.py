@@ -40,18 +40,26 @@ class route(object):
     Jeremy Kelley - initial work
     Peter Bengtsson - redirects, named routes and improved comments
     Ben Darnell - general awesomeness
+    Kevin Turner - introduction of host segmentation
     """
 
-    _routes = []
+    _routes = { '': [] }    # '' is for default host .*
 
-    def __init__(self, uri, name=None):
+    def __init__(self, uri, name=None, host=''):
         self._uri = uri
         self.name = name
+        self.host = host
 
     def __call__(self, _handler):
         """gets called when we class decorate"""
         name = self.name or _handler.__name__
-        self._routes.append(tornado.web.url(self._uri, _handler, name=name))
+        if not self._routes.has_key(self.host):
+            self._routes[self.host] = []
+
+        self._routes[self.host].append(tornado.web.url(self._uri,
+                                                       _handler,
+                                                       name=name)
+                                      )
         return _handler
 
     @classmethod
@@ -69,8 +77,10 @@ class route(object):
 #   class SmartphoneHandler(RequestHandler):
 #        def get(self):
 #            ...
-def route_redirect(from_, to, name=None):
-    route._routes.append(tornado.web.url(
+def route_redirect(from_, to, name=None, host=''):
+    if not route._routes.has_key(host):
+        route._routes[host] = []
+    route._routes[host].append(tornado.web.url(
         from_,
         tornado.web.RedirectHandler,
         dict(url=to),
