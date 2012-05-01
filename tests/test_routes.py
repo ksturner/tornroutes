@@ -25,6 +25,9 @@ class RouteTests(unittest.TestCase):
 
         route_redirect('/other_redir', '/abc', name='other')
 
+    def tearDown(self):
+        r = route.get_routes()
+        r.clear()
 
     def test_num_routes(self):
         self.assertEqual(len(route.get_routes()['']),4) # 2 routes + 2 redir
@@ -43,4 +46,20 @@ class RouteTests(unittest.TestCase):
         self.assertTrue( t.reverse_url('abc') )
         self.assertTrue( t.reverse_url('other') )
 
+    def test_hosts(self):
+        host_routes = route.get_routes()
+        self.assertEqual( len(host_routes.keys()), 1 )
+
+        h = 'blah.somewhere.com'
+
+        @route('/abc', host=h)
+        class AbcFake2(object):
+            pass
+        host_routes = route.get_routes()
+        self.assertEqual( len(host_routes.keys()), 2 )
+        self.assertTrue( h in host_routes.keys() )
+
+        t = tornado.web.Application([], {})
+        for host, routes in host_routes.iteritems():
+            t.add_handlers(host, routes)
 
